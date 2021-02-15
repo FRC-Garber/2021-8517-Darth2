@@ -7,6 +7,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.LinearFilter;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
@@ -34,25 +35,13 @@ public class ChassisDefaultCommand extends CommandBase {
 
     double _speed = (RobotContainer.stickDriver.getRawAxis(3) - RobotContainer.stickDriver.getRawAxis(2)) * Constants.kTeleopSpeedScale;
     double _rotation = RobotContainer.stickDriver.getX(Hand.kLeft) * Constants.kTeleopRotationScale;
-    RobotContainer.chassisSubsystem.driveTeleopArcade(filterSpeed.calculate(_speed), filterRotation.calculate(_rotation), false);
-    calculateDriveData();
-
+    _speed = filterSpeed.calculate(_speed);
+    _rotation = filterRotation.calculate(_rotation);
+    RobotContainer.chassisSubsystem.driveTeleopArcade(_speed, _rotation, false);
+    SmartDashboard.putNumber("Chassis/Teleop Joystick Speed", _speed);
+    SmartDashboard.putNumber("Chassis/Teleop Joystick Rotation", _rotation);
   }
 
-  private void calculateDriveData(){
-    // double angle = RobotContainer.driveSubsystem.getAngle();
-    // double velocityAng = (angle - angle_old) / Constants.kSchedularLoopRate;
-    // double accelerationRot = (velocityAng - velocityAng_old) / Constants.kSchedularLoopRate;
-
-    // angle_old = angle;
-    // velocityAng_old= velocityAng;
-
-    // double distance = RobotContainer.driveSubsystem.getDistanceInInches();
-    // double velocity = (distance - distance_old) / Constants.kSchedularLoopRate;
-    // double acceleration = (velocity - velocity_old) / Constants.kSchedularLoopRate;
-    // velocity_old = velocity;
-    // distance_old = distance;
-  }
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {}

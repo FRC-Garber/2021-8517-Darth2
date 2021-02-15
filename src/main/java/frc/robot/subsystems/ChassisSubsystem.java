@@ -132,28 +132,23 @@ public class ChassisSubsystem extends SubsystemBase {
     m_angle_Deg = -gyro.getAngle();
   }
   private void calcVelocity(){
-    double in = getDistance();
-    double inPerSec = (in - distance_prev) / Constants.kSchedularLoopRate;
-    distance_prev = in;
+    double inPerSec = (getDistance() - distance_prev) / Constants.kSchedularLoopRate;
+    distance_prev = getDistance();
     m_velocity_InPerSec = inPerSec;
   }
   private void calcAcceleration(){
-    double velocity = getVelocity();
-    double accel = (velocity - velocity_prev)/Constants.kSchedularLoopRate;
+    double accel = (getVelocity() - velocity_prev)/Constants.kSchedularLoopRate;
     velocity_prev = getVelocity();
     m_acceleration_InPerSecSquared = accel;
-
   }
   private void calcAngularVelocity(){
-    double angle = getAngle();
-    double degreesPerSec = (angle - angle_prev) /Constants.kSchedularLoopRate;
-    angle_prev = angle;
+    double degreesPerSec = (getAngle() - angle_prev) /Constants.kSchedularLoopRate;
+    angle_prev = getAngle();
     m_angularVelocity_DegPerSec = degreesPerSec;
   }
   private void calcAngularAcceleration(){
-    double angularVel = getAngularVelocity();
-    double accel = (angularVel - angularVel_prev) / Constants.kSchedularLoopRate;
-    angularVel_prev = angularVel;
+    double accel = (getAngularVelocity() - angularVel_prev) / Constants.kSchedularLoopRate;
+    angularVel_prev = getAngularVelocity();
     m_angularAcceleration_DegPerSecSquared = accel;
   }
   public double getDistance(){
@@ -245,6 +240,7 @@ public class ChassisSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Chassis/BL EncCnts", BL_Motor.getSelectedSensorPosition());
     SmartDashboard.putNumber("Chassis/FR EncCnts", FR_Motor.getSelectedSensorPosition());
     SmartDashboard.putNumber("Chassis/BR EncCnts", BR_Motor.getSelectedSensorPosition());
+    
     
     // Get the PID values
     if(SmartDashboard.getBoolean("Chassis/PID Update Enable", false)){
