@@ -25,7 +25,7 @@ public class ChassisAutoRotateProfiledPIDCommand extends ProfiledPIDCommand {
         });
         addRequirements(RobotContainer.chassisSubsystem);
         getController().setTolerance(Constants.kChassisAutoRotatePIDToleranceAng_Deg, Constants.kChassisAutoRotatePIDToleranceVel_DegPerSec);
-        getController().setIntegratorRange(-0.5, 0.5);
+        getController().setIntegratorRange(-Constants.kChassisAutoRotateMaxIntegrator, Constants.kChassisAutoRotateMaxIntegrator);
   }
   @Override 
   public void initialize() {
@@ -33,6 +33,7 @@ public class ChassisAutoRotateProfiledPIDCommand extends ProfiledPIDCommand {
     RobotContainer.chassisSubsystem.reset();
     getController().reset(0);
     getController().setPID(Constants.kChassisAutoRotate_P, Constants.kChassisAutoRotate_I, Constants.kChassisAutoRotate_D);
+    getController().setIntegratorRange(-Constants.kChassisAutoRotateMaxIntegrator, Constants.kChassisAutoRotateMaxIntegrator);
   }
   @Override
   public void execute() {

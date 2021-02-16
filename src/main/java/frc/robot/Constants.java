@@ -26,11 +26,11 @@ public final class Constants {
     public static final double kTeleopRotationScale = 0.5;
 
     // Chassis Autonomous Drive PID
-    public static double kChassisAutoDrive_P = 0.09;
-    public static double kChassisAutoDrive_I = 0.09;//0.0012;
+    public static double kChassisAutoDrive_P = 0.03;
+    public static double kChassisAutoDrive_I = 0.0015;//0.0012;
     public static double kChassisAutoDrive_D = 0.0;//.0000001;
     public static double kChassisAutoDriveMaxSpeed = 0.5;
-    public static final double kChassisAutoDrivePIDToleranceDis_Inch = .5;
+    public static final double kChassisAutoDrivePIDToleranceDis_Inch = 0.5;
     public static final double kChassisAutoDrivePIDToleranceVel_InPerSec = 1;
 
     // Chasis Autonomous Drive Rotation PID
@@ -41,12 +41,13 @@ public final class Constants {
     public static double kChassisAutoDriveRotationPIDToleranceVel_DegPerSec = 2;
     
     // Chassis Autonomous Rotate PID
-    public static double kChassisAutoRotate_P = 0.01;
-    public static double kChassisAutoRotate_I = 0.001;
+    public static double kChassisAutoRotate_P = 0.003;
+    public static double kChassisAutoRotate_I = 0.0047;
     public static double kChassisAutoRotate_D = 0;
-    public static double kChassisAutoRotateMaxSpeed = 0.5;
+    public static double kChassisAutoRotateMaxSpeed = 0.4;
     public static final double kChassisAutoRotatePIDToleranceAng_Deg = 1;
     public static final double kChassisAutoRotatePIDToleranceVel_DegPerSec = 10;
+    public static double kChassisAutoRotateMaxIntegrator = 1.0;
 
     // Chassis Autonomous Profiled PID constraints
     public static final double kChassisAutoDriveConstraintVel_InPerSec = 10; // 187 is Max

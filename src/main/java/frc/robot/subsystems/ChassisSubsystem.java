@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.LinearFilter;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.controller.PIDController;
@@ -32,6 +33,8 @@ public class ChassisSubsystem extends SubsystemBase {
   PIDController driveRotationPID;
   // Module variables used to hold the last distnance and angle for calculations
   double m_distance_In;
+  double m_leftDistance_Cnts;
+  double m_rightDistance_Cnts;
   double m_angle_Deg;
   double m_velocity_InPerSec;
   double m_acceleration_InPerSecSquared;
@@ -54,6 +57,8 @@ public class ChassisSubsystem extends SubsystemBase {
     BL_Motor.follow(FL_Motor);
     BR_Motor.follow(FR_Motor);
 
+    
+    
     // Create a differential drive object that drives the motors with the type of robot we have.
     robotDrive = new DifferentialDrive(FL_Motor, FR_Motor);
     // Define the gyro object we have
@@ -73,6 +78,15 @@ public class ChassisSubsystem extends SubsystemBase {
   public void driveTeleopArcade(double speed, double rotation, boolean squareInputs) {
     robotDrive.arcadeDrive(speed, rotation, squareInputs);
   }
+  public void driveAutoArcade(double speed, double maxSpeed){
+    double _speed = speed;
+    // limit the speed based on what was commanded
+    _speed = MathUtil.clamp(_speed, -maxSpeed, maxSpeed);
+    // Filter the input to prevent sudden changes
+    _speed =  filterAutoSpeed.calculate(_speed);
+    // drive the robot in arcade
+    robotDrive.arcadeDrive(_speed, getRotationPIDControllerValue(), false);
+  }
   /** Drive the robot in autonomous with a speed.
    * <p>The input speed will be clamped at limits and filtered
    * This method should be called from a PID, Time limiting or distance limiting command.
@@ -80,13 +94,13 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param speed The speed to drive
    */
   public void driveAutoArcade(double speed) {
-    double _speed = speed;
-    // limit the speed based on what was commanded
-    _speed = MathUtil.clamp(_speed, -Constants.kChassisAutoDriveMaxSpeed, Constants.kChassisAutoDriveMaxSpeed);
-    // Filter the input to prevent sudden changes
-    _speed =  filterAutoSpeed.calculate(_speed);
-    // drive the robot in arcade
-    robotDrive.arcadeDrive(_speed, getRotationPIDControllerValue(), false);
+    driveAutoArcade(speed, Constants.kChassisAutoDriveMaxSpeed);
+  }
+  public void rotateAutoArcade(double speed, double maxSpeed){
+    double _speed = -speed;
+    _speed = MathUtil.clamp(_speed, -maxSpeed, maxSpeed);
+    _speed = filterAutoAngle.calculate(_speed);
+    robotDrive.arcadeDrive(0, _speed, false);
   }
   /** Rotate the robot in autonomous with a speed input
    * The input speed will be clamped and filtered
@@ -94,34 +108,30 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param speed The speed to rotate
    */
   public void rotateAutoArcade(double speed){
-    double _speed = -speed;
-    // limit the speed based on what was commanded
-    _speed = MathUtil.clamp(_speed, -Constants.kChassisAutoRotateMaxSpeed, Constants.kChassisAutoRotateMaxSpeed);
-    // Filter the input to prevent sudden changes
-    _speed = filterAutoAngle.calculate(_speed);
-    // rotate the robot in arcade
-    robotDrive.arcadeDrive(0, _speed, false);
+    rotateAutoArcade(speed, Constants.kChassisAutoRotateMaxSpeed);
   }
   public void rotateAutoProfiledArcade(double speed){
     speed = MathUtil.clamp(speed, -Constants.kChassisAutoRotateMaxSpeed, Constants.kChassisAutoRotateMaxSpeed);
-    robotDrive.arcadeDrive(0, speed, false);
+    robotDrive.arcadeDrive(0, -speed, false);
   }
   public void driveAutoProfiledArcade(double speed){
     speed = MathUtil.clamp(speed, -Constants.kChassisAutoDriveMaxSpeed, Constants.kChassisAutoDriveMaxSpeed);
     robotDrive.arcadeDrive(speed, -getRotationPIDControllerValue(), false);
   }
-  /** Calculate a new PID value for the rotation speed during a autonmous drive command
-   * <p>The reset of the PID must be called before each start of the drive command to reset the integral term
-   * @return get the latest PID value output
-   */
-  public double getRotationPIDControllerValue(){
-    return driveRotationPID.calculate(getAngle());
+
+  private void calcRightMotorCnts(){
+    m_rightDistance_Cnts = -FR_Motor.getSelectedSensorPosition();
+  }
+  private void calcLeftMotorCnts(){
+    m_leftDistance_Cnts = FL_Motor.getSelectedSensorPosition();
   }
   private void calcDistance(){
     // Calculate the circumference of the wheel 2PI*R or PI*D. This is also the  Inches/Revolution of the wheel
     double wheelCircumference_In = Math.PI * Constants.kChassisWheelDiameter_In;
+    calcRightMotorCnts();
+    calcLeftMotorCnts();
     // Get an average of the Left motor encoders
-    double motorEncCnts = (FL_Motor.getSelectedSensorPosition() + FR_Motor.getSelectedSensorPosition()) / 2;
+    double motorEncCnts = (m_leftDistance_Cnts + m_rightDistance_Cnts) / 2.0;
     // calculate the number of revolutions the motor has gone
     double motorRev = motorEncCnts / Constants.kChassisDriveMotorEncoderCntsPerRev;
     double wheelRev = motorRev / Constants.kChassisGearRatio;
@@ -169,7 +179,13 @@ public class ChassisSubsystem extends SubsystemBase {
   public double getAngularAcceleration(){
     return m_angularAcceleration_DegPerSecSquared;
   }
-
+  /** Calculate a new PID value for the rotation speed during a autonmous drive command
+   * <p>The reset of the PID must be called before each start of the drive command to reset the integral term
+   * @return get the latest PID value output
+   */
+  public double getRotationPIDControllerValue(){
+    return driveRotationPID.calculate(getAngle());
+  }
   /** 
    * @return Get the current angle in degrees of the robot
    */
@@ -236,11 +252,9 @@ public class ChassisSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Chassis/Angular Velocity DegPerSec", getAngularVelocity());
     SmartDashboard.putNumber("Chassis/Angular Acceleration DegPerSecSquared", getAngularAcceleration());
 
-    SmartDashboard.putNumber("Chassis/FL EncCnts", FL_Motor.getSelectedSensorPosition());
-    SmartDashboard.putNumber("Chassis/BL EncCnts", BL_Motor.getSelectedSensorPosition());
-    SmartDashboard.putNumber("Chassis/FR EncCnts", FR_Motor.getSelectedSensorPosition());
-    SmartDashboard.putNumber("Chassis/BR EncCnts", BR_Motor.getSelectedSensorPosition());
-    
+    SmartDashboard.putNumber("Chassis/Left EncCnts", m_leftDistance_Cnts);
+    SmartDashboard.putNumber("Chassis/Right EncCnts", m_rightDistance_Cnts);
+
     
     // Get the PID values
     if(SmartDashboard.getBoolean("Chassis/PID Update Enable", false)){
@@ -266,9 +280,10 @@ public class ChassisSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Chassis/AutoDriveRotate_kP", Constants.kChassisAutoDriveRotation_P);
     SmartDashboard.putNumber("Chassis/AutoDriveRotate_kI", Constants.kChassisAutoDriveRotation_I);
     SmartDashboard.putNumber("Chassis/AutoDriveRotate_kD", Constants.kChassisAutoDriveRotation_D);
-    
+    SmartDashboard.putNumber("Chassis/AutoRotateMaxIntegrator", Constants.kChassisAutoRotateMaxIntegrator);
     SmartDashboard.putBoolean("Chassis/PID Update Enable", false);
     SmartDashboard.putBoolean("Chassis/Calibrate Gyro", false);
+    
   }
   private void getSmartDashboard(){
     Constants.kChassisAutoDrive_P = SmartDashboard.getNumber("Chassis/AutoDrive_kP", 0);
@@ -280,6 +295,7 @@ public class ChassisSubsystem extends SubsystemBase {
     Constants.kChassisAutoRotate_I = SmartDashboard.getNumber("Chassis/AutoRotate_kI", 0);
     Constants.kChassisAutoRotate_D = SmartDashboard.getNumber("Chassis/AutoRotate_kD", 0);
     Constants.kChassisAutoRotateMaxSpeed = SmartDashboard.getNumber("Chassis/AutoRotate_MaxSpeed", 0);
+    Constants.kChassisAutoRotateMaxIntegrator = SmartDashboard.getNumber("Chassis/AutoRotateMaxIntegrator", 1.0);
 
     driveRotationPID.setP(SmartDashboard.getNumber("Chassis/AutoDriveRotate_kP", Constants.kChassisAutoDriveRotation_P));
     driveRotationPID.setI(SmartDashboard.getNumber("Chassis/AutoDriveRotate_kI", Constants.kChassisAutoDriveRotation_I));
