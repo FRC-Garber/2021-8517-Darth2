@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.LinearFilter;
@@ -31,29 +27,29 @@ public class ChassisAutoDrivePICommand extends PIDCommand {
   m_kP = kP;
   m_kI = kI;
 
-}
-@Override 
-public void initialize() {
-  super.initialize();
-  RobotContainer.chassisSubsystem.setLinearFIlterAutoSpeed(LinearFilter.singlePoleIIR(0.01, Constants.kSchedularLoopRate));
-  RobotContainer.chassisSubsystem.reset();
-  getController().reset();
-  getController().setPID(m_kP, m_kI, 0);
-  
-}
-@Override
-public void execute() { 
-  super.execute();
-  SmartDashboard.putNumber("Chassis/Distance Error In", getController().getPositionError());
-  SmartDashboard.putNumber("Chassis/Velocity Error InPerSec", getController().getVelocityError());
-}
-// Returns true when the command should end.
-@Override
-public boolean isFinished() {
-  if(getController().atSetpoint()){
-    getController().reset();
-    return true;
   }
-  return false;
-}
+  @Override 
+  public void initialize() {
+    super.initialize();
+    RobotContainer.chassisSubsystem.setLinearFIlterAutoSpeed(LinearFilter.singlePoleIIR(0.01, Constants.kSchedularLoopRate));
+    RobotContainer.chassisSubsystem.reset();
+    getController().reset();
+    getController().setPID(m_kP, m_kI, 0);
+    
+  }
+  @Override
+  public void execute() { 
+    super.execute();
+    SmartDashboard.putNumber("Chassis/Distance Error In", getController().getPositionError());
+    SmartDashboard.putNumber("Chassis/Velocity Error InPerSec", getController().getVelocityError());
+  }
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    if(getController().atSetpoint()){
+      getController().reset();
+      return true;
+    }
+    return false;
+  }
 }

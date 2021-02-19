@@ -3,8 +3,6 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
-
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.LinearFilter;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.controller.PIDController;
@@ -47,6 +45,7 @@ public class ChassisSubsystem extends SubsystemBase {
   double angularVel_prev = 0;
   /** Creates a new DriveSubsystem. */
   public ChassisSubsystem() {
+    this.getName();
     // Set Motor so they are in brake mode so they will slow down faster when no power is applied 
     FL_Motor.setNeutralMode(NeutralMode.Brake);
     BL_Motor.setNeutralMode(NeutralMode.Brake);
